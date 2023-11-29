@@ -1,72 +1,38 @@
 // Create a web server
-// 1. GET /comments - return all comments
-// 2. GET /comments/:id - return comment with given id
-// 3. POST /comments - create a new comment
-// 4. PUT /comments/:id - update comment with given id
-// 5. DELETE /comments/:id - delete comment with given id
+// Load the comments.json file
+// Parse the JSON to an object and return it to the user
 
-const express = require('express');
-const Joi = require('joi');
-const app = express();
+// Load the fs module
+const fs = require('fs');
+// Load the http module
+const http = require('http');
+// Load the path module
+const path = require('path');
 
-app.use(express.json());
+// Create the server
+const server = http.createServer();
 
-const comments = [
-  {id: 1, comment: 'comment 1'},
-  {id: 2, comment: 'comment 2'},
-  {id: 3, comment: 'comment 3'},
-  {id: 4, comment: 'comment 4'},
-  {id: 5, comment: 'comment 5'},
-];
-
-app.get('/comments', (req, res) => {
-  res.send(comments);
+// Listen to the request event
+server.on('request', (req, res) => {
+    // Set the content type
+    res.setHeader('Content-Type', 'application/json');
+    // Set the status code
+    res.statusCode = 200;
+    // Get the file path
+    const filePath = path.join(__dirname, 'comments.json');
+    // Read the file
+    fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+            console.log(err);
+            res.end('Error');
+        } else {
+            // Parse the json to an object
+            const comments = JSON.parse(data);
+            // Send the comments back to the user
+            res.end(JSON.stringify(comments));
+        }
+    });
 });
 
-app.get('/comments/:id', (req, res) => {
-  const comment = comments.find(c => c.id === parseInt(req.params.id));
-  if (!comment) {
-    return res.status(404).send('Comment not found');
-  }
-  res.send(comment);
-});
-
-app.post('/comments', (req, res) => {
-  const {error} = validateComment(req.body);
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  }
-
-  const comment = {
-    id: comments.length + 1,
-    comment: req.body.comment,
-  };
-  comments.push(comment);
-  res.send(comment);
-});
-
-app.put('/comments/:id', (req, res) => {
-  const comment = comments.find(c => c.id === parseInt(req.params.id));
-  if (!comment) {
-    return res.status(404).send('Comment not found');
-  }
-
-  const {error} = validateComment(req.body);
-  if (error) {
-    return res.status(400).send(error.details[0].message);
-  }
-
-  comment.comment = req.body.comment;
-  res.send(comment);
-});
-
-app.delete('/comments/:id', (req, res) => {
-  const comment = comments.find(c => c.id === parseInt(req.params.id));
-  if (!comment) {
-    return res.status(404).send('Comment not found');
-  }
-
-  const index = comments.indexOf(comment);
-  comments.splice(index, 1);
-
-  res.send(comment
+// Start the server
+server.listen(3000, () => console.log('Server is running on port 3000...'));
